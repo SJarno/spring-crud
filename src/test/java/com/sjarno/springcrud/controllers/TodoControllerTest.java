@@ -3,6 +3,7 @@ package com.sjarno.springcrud.controllers;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -98,9 +99,21 @@ public class TodoControllerTest {
         /* Initial size should be 1 */
         checkArraySize(1);
 
-        addTodo(todo);
+        addTodo(todo).andExpect(status().isCreated());
         /* Should be 2 */
         checkArraySize(2);
+    }
+    @Test
+    void newTodosWithoEmptyValuesDoesNotAddToDb() throws Exception {
+        Todo todoWithoutTitle = new Todo();
+        todoWithoutTitle.setContent("content");
+        Todo todoWithoutContent = new Todo();
+        todoWithoutContent.setTitle("title");
+        checkArraySize(1);
+        addTodo(todoWithoutTitle).andExpect(status().isUnprocessableEntity());
+        checkArraySize(1);
+        addTodo(todoWithoutContent).andExpect(status().isUnprocessableEntity());
+        checkArraySize(1);
     }
 
     @Test
@@ -132,8 +145,8 @@ public class TodoControllerTest {
     private ResultActions addTodo(Todo todo) throws Exception {
         return this.mockMvc.perform(post("/api/add-todo")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(objectMapper.writeValueAsString(todo)))
-                .andExpect(status().isOk());
+                .content(objectMapper.writeValueAsString(todo)));
+                //.andExpect(status().isCreated());
     }
 
     private ResultActions deleteTodo(int id) throws Exception {

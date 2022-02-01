@@ -5,10 +5,13 @@ import javax.annotation.PostConstruct;
 
 import com.sjarno.springcrud.models.Todo;
 import com.sjarno.springcrud.repositories.TodoRepository;
+import com.sjarno.springcrud.services.TodoService;
 
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,9 +29,12 @@ public class TodoController {
     @Autowired
     private TodoRepository todoRepository;
 
+    @Autowired
+    private TodoService todoService;
+
     @GetMapping("/todos")
     public List<Todo> getAllTodos() {
-        return this.todoRepository.findAll();
+        return this.todoService.getAllTodos();
     }
     @GetMapping("/todo/{id}")
     public Todo getTodo(@PathVariable Long id) throws Exception{
@@ -37,8 +43,14 @@ public class TodoController {
         return todo;
     }
     @PostMapping("/add-todo")
-    public void addNewTodo(@RequestBody Todo todo) {
-        this.todoRepository.save(todo);
+    public ResponseEntity<String> addNewTodo(@RequestBody Todo todo) {
+        try {
+            this.todoService.addTodo(todo);
+            return new ResponseEntity<String>("Success", HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+        
     }
     /* Update */
     @Transactional

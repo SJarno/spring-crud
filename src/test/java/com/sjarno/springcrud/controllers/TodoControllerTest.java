@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -26,6 +28,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class TodoControllerTest {
 
     @Autowired
@@ -46,6 +49,7 @@ public class TodoControllerTest {
          * https://www.baeldung.com/guide-to-jayway-jsonpath
          */
         checkArraySize(1);
+        // array of items
         this.mockMvc.perform(get("/api/todos"))
                 .andExpectAll(status().isOk())
                 .andDo(print())
@@ -53,9 +57,9 @@ public class TodoControllerTest {
                 .andExpect(jsonPath("$[*].id", containsInAnyOrder(1)))
                 .andExpect(jsonPath("$[*].title", containsInAnyOrder("Test Title")))
                 .andExpect(jsonPath("$[*].content", containsInAnyOrder("Loads of content here")));
-        // array of items
+        
         checkArraySize(1);
-        // array of members
+        // array of members:
         /*
          * mockMvc.perform(get("/api/todos"))
          * .andExpect(jsonPath("$.*", hasSize(2)));

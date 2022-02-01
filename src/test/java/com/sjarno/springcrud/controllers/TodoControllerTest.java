@@ -114,7 +114,7 @@ public class TodoControllerTest {
             .isCreated()).andReturn();
         assertEquals("Success", result.getResponse().getContentAsString());
         /* Should be 2 */
-        checkArraySize(1);
+        checkArraySize(2);
     }
     @Test
     void newTodosWithoEmptyValuesDoesNotAddToDb() throws Exception {
@@ -130,7 +130,7 @@ public class TodoControllerTest {
 
         addTodo(todoWithoutContent)
             .andExpect(status().isUnprocessableEntity());
-            
+
         checkArraySize(1);
     }
 

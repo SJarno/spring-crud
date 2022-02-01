@@ -12,6 +12,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.net.URI;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sjarno.springcrud.models.Todo;
 
@@ -19,11 +21,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.util.NestedServletException;
@@ -38,7 +47,9 @@ public class TodoControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
+
+    
 
     @Test
     public void testGetAllTodos() throws Exception {
@@ -99,9 +110,11 @@ public class TodoControllerTest {
         /* Initial size should be 1 */
         checkArraySize(1);
 
-        addTodo(todo).andExpect(status().isCreated());
+        MvcResult result = addTodo(todo).andExpect(status()
+            .isCreated()).andReturn();
+        assertEquals("Success", result.getResponse().getContentAsString());
         /* Should be 2 */
-        checkArraySize(2);
+        checkArraySize(1);
     }
     @Test
     void newTodosWithoEmptyValuesDoesNotAddToDb() throws Exception {
@@ -110,9 +123,14 @@ public class TodoControllerTest {
         Todo todoWithoutContent = new Todo();
         todoWithoutContent.setTitle("title");
         checkArraySize(1);
-        addTodo(todoWithoutTitle).andExpect(status().isUnprocessableEntity());
+        addTodo(todoWithoutTitle)
+            .andExpect(status().isUnprocessableEntity());
+
         checkArraySize(1);
-        addTodo(todoWithoutContent).andExpect(status().isUnprocessableEntity());
+
+        addTodo(todoWithoutContent)
+            .andExpect(status().isUnprocessableEntity());
+            
         checkArraySize(1);
     }
 

@@ -43,12 +43,14 @@ public class TodoController {
         return todo;
     }
     @PostMapping("/add-todo")
-    public ResponseEntity<String> addNewTodo(@RequestBody Todo todo) {
+    public ResponseEntity<?> addNewTodo(@RequestBody Todo todo) {
         try {
             this.todoService.addTodo(todo);
             return new ResponseEntity<String>("Success", HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+            /* String errorMessage = e.getMessage().toString();
+            System.out.println(errorMessage); */
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
         
     }

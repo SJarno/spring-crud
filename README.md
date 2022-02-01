@@ -14,3 +14,6 @@ For future reference
 - Moar tests (started)
 - Spring Security
 - Testing with Spring Security
+
+## Notes
+- Jacoco plugin (run with: "mvn test jacoco:report")

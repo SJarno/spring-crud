@@ -1,15 +1,14 @@
 package com.sjarno.springcrud.controllers;
 
 import java.util.List;
+
 import javax.annotation.PostConstruct;
 
 import com.sjarno.springcrud.models.Todo;
 import com.sjarno.springcrud.repositories.TodoRepository;
 import com.sjarno.springcrud.services.TodoService;
 
-import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +54,6 @@ public class TodoController {
         
     }
     /* Update */
-    @Transactional
     @PutMapping("/update/{todoId}")
     public ResponseEntity<String> updateTodo(@RequestBody Todo todo, @PathVariable("todoId") Long id) {
         try {

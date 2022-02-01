@@ -36,15 +36,14 @@ public class TodoService {
 
     }
 
-    
+    @Transactional
     public void updateTodo(Todo todo, Long id) throws Exception {
         Todo foundTodo = findTodoById(id);
-        
+
         if (validateTodo(todo));
         foundTodo.setTitle(todo.getTitle());
         foundTodo.setContent(todo.getContent());
         this.todoRepository.save(foundTodo);
-        
 
     }
 

@@ -1,4 +1,7 @@
 # Spring Crud operations
+![Github Actions](https://github.com/SJarno/spring-crud/actions/workflows/maven.yml/badge.svg)
+
+
 Basic crud operations with json data, main focus is with tests. 
 
 For future reference 

@@ -10,8 +10,8 @@ For future reference
 ## Road Map
 - Basic Crud on controllers (done)
 - Tests (done)
-- Service classess for controllers (started)
-- Moar tests (started)
+- Service classess for controllers (done): note - check transactional with putMethod/update
+- Moar tests (started): missing updated delete tests
 - Spring Security
 - Testing with Spring Security
 

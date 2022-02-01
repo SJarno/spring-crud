@@ -57,19 +57,24 @@ public class TodoController {
     /* Update */
     @Transactional
     @PutMapping("/update/{todoId}")
-    public void updateTodo(@RequestBody Todo todo, @PathVariable("todoId") Long id) {
-        Todo todoToUpdate = this.todoRepository.findById(id)
-            .orElseThrow(IllegalArgumentException::new);
-        if(todo.getContent().isEmpty() || todo.getTitle().isEmpty()) {
-            throw new IllegalArgumentException("Arvot eivät saa olla tyhjiä");
+    public ResponseEntity<String> updateTodo(@RequestBody Todo todo, @PathVariable("todoId") Long id) {
+        try {
+            this.todoService.updateTodo(todo, id);
+            return new ResponseEntity<>("Updated", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
-        todoToUpdate.setTitle(todo.getTitle());
-        todoToUpdate.setContent(todo.getContent());
+        
     }
 
     @DeleteMapping("/delete-todo/{id}")
-    public void deleteTodo(@PathVariable Long id) {
-        this.todoRepository.deleteById(id);
+    public ResponseEntity<String> deleteTodo(@PathVariable Long id) {
+        try {
+            this.todoService.deleteTodoById(id);
+            return new ResponseEntity<>("Deleted", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
     @PostConstruct
     public void setUp() {

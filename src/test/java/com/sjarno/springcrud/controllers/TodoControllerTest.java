@@ -4,7 +4,6 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -12,22 +11,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.net.URI;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sjarno.springcrud.models.Todo;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
@@ -35,7 +27,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.web.util.NestedServletException;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -49,7 +40,20 @@ public class TodoControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private Todo todoWithNullValues;
+    private Todo todoWithoutTitle;
     
+    private Todo todoWithoutContent;
+        
+
+    @BeforeEach
+    void setUp() {
+        todoWithNullValues = new Todo();
+        todoWithoutTitle = new Todo("", "");
+        todoWithoutTitle.setContent("content");
+        todoWithoutContent = new Todo("", "");
+        todoWithoutContent.setTitle("title");
+    }
 
     @Test
     public void testGetAllTodos() throws Exception {
@@ -62,8 +66,7 @@ public class TodoControllerTest {
          * Baeldung guide for jsonpath:
          * https://www.baeldung.com/guide-to-jayway-jsonpath
          */
-        checkArraySize(1);
-        // array of items
+
         this.mockMvc.perform(get("/api/todos"))
                 .andExpectAll(status().isOk())
                 .andDo(print())
@@ -71,13 +74,8 @@ public class TodoControllerTest {
                 .andExpect(jsonPath("$[*].id", containsInAnyOrder(1)))
                 .andExpect(jsonPath("$[*].title", containsInAnyOrder("Test Title")))
                 .andExpect(jsonPath("$[*].content", containsInAnyOrder("Loads of content here")));
-
         checkArraySize(1);
-        // array of members:
-        /*
-         * mockMvc.perform(get("/api/todos"))
-         * .andExpect(jsonPath("$.*", hasSize(2)));
-         */
+        
     }
 
     @Test
@@ -96,11 +94,12 @@ public class TodoControllerTest {
     @Test
     void canUpdateTodo() throws Exception {
         Todo todoToUpdate = new Todo("title change", "content change");
-        this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/1")
+        MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/1")
             .contentType(MediaType.APPLICATION_JSON_VALUE)
             .content(objectMapper.writeValueAsString(todoToUpdate)))
-            .andExpect(status().isOk());
+            .andExpect(status().isOk()).andReturn();
 
+        assertEquals("Updated", result.getResponse().getContentAsString());
         getTodoById(1, todoToUpdate.getTitle(), todoToUpdate.getContent());
     }
 
@@ -118,19 +117,20 @@ public class TodoControllerTest {
     }
     @Test
     void newTodosWithoEmptyValuesDoesNotAddToDb() throws Exception {
-        Todo todoWithoutTitle = new Todo();
-        todoWithoutTitle.setContent("content");
-        Todo todoWithoutContent = new Todo();
-        todoWithoutContent.setTitle("title");
+        
         checkArraySize(1);
-        addTodo(todoWithoutTitle)
-            .andExpect(status().isUnprocessableEntity());
+        MvcResult nullValueResult = addTodo(todoWithNullValues)
+            .andExpect(status().isUnprocessableEntity()).andReturn();
+        assertEquals("Values cannot be empty!", nullValueResult.getResponse().getContentAsString());
 
+        MvcResult noTitleResult = addTodo(todoWithoutTitle)
+            .andExpect(status().isUnprocessableEntity()).andReturn();
+        assertEquals("Title cannot be empty", noTitleResult.getResponse().getContentAsString());
         checkArraySize(1);
 
-        addTodo(todoWithoutContent)
-            .andExpect(status().isUnprocessableEntity());
-
+        MvcResult noContentResult = addTodo(todoWithoutContent)
+            .andExpect(status().isUnprocessableEntity()).andReturn();
+        assertEquals("Content cannot be empty", noContentResult.getResponse().getContentAsString());
         checkArraySize(1);
     }
 
@@ -153,6 +153,34 @@ public class TodoControllerTest {
         deleteTodo(5);
         checkArraySize(0);
 
+    }
+    @Test
+    void wrongValuesDoesNotUpdateTodo() throws Exception{
+        Todo todoToUpdate = new Todo("title change", "content change");
+        MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/97")
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .content(objectMapper.writeValueAsString(todoToUpdate)))
+            .andExpect(status().isUnprocessableEntity()).andReturn();
+        assertEquals("Not found", result.getResponse().getContentAsString());
+
+        
+        MvcResult resultWithNullValues = this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/1")
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .content(objectMapper.writeValueAsString(todoWithNullValues)))
+            .andExpect(status().isUnprocessableEntity()).andReturn();
+        assertEquals("Values cannot be empty!", resultWithNullValues.getResponse().getContentAsString());
+
+        MvcResult resultWithoutTitle = this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/1")
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .content(objectMapper.writeValueAsString(todoWithoutTitle)))
+            .andExpect(status().isUnprocessableEntity()).andReturn();
+        assertEquals("Title cannot be empty", resultWithoutTitle.getResponse().getContentAsString());
+
+        MvcResult resultWithoutContent = this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/1")
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .content(objectMapper.writeValueAsString(todoWithoutContent)))
+            .andExpect(status().isUnprocessableEntity()).andReturn();
+        assertEquals("Content cannot be empty", resultWithoutContent.getResponse().getContentAsString());
     }
 
     private ResultActions checkArraySize(int size) throws Exception {

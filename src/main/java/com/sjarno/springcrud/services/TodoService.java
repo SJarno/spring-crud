@@ -3,7 +3,6 @@ package com.sjarno.springcrud.services;
 import java.util.List;
 import java.util.Optional;
 
-
 import com.sjarno.springcrud.models.Todo;
 import com.sjarno.springcrud.repositories.TodoRepository;
 
@@ -19,16 +18,8 @@ public class TodoService {
 
     @Transactional
     public void addTodo(Todo todo) {
-        /* Check for null values: */
-        if (todo.getTitle() == null || todo.getContent() == null) {
-            throw new NullPointerException("Values cannot be empty!");
-        }
-        if (todo.getTitle().isBlank()) {
-            throw new IllegalArgumentException("Title cannot be empty");
-        }
-        if (todo.getContent().isBlank()) {
-            throw new IllegalArgumentException("Content cannot be empty");
-        }
+        // Validate todo values
+        if (validateTodo(todo));
         todoRepository.save(todo);
     }
 
@@ -44,5 +35,35 @@ public class TodoService {
         throw new Exception("Not found");
 
     }
+
     
+    public void updateTodo(Todo todo, Long id) throws Exception {
+        Todo foundTodo = findTodoById(id);
+        
+        if (validateTodo(todo));
+        foundTodo.setTitle(todo.getTitle());
+        foundTodo.setContent(todo.getContent());
+        this.todoRepository.save(foundTodo);
+        
+
+    }
+
+    private boolean validateTodo(Todo todo) {
+        if (todo.getTitle() == null || todo.getContent() == null) {
+            throw new NullPointerException("Values cannot be empty!");
+        }
+        if (todo.getTitle().isBlank()) {
+            throw new IllegalArgumentException("Title cannot be empty");
+        }
+        if (todo.getContent().isBlank()) {
+            throw new IllegalArgumentException("Content cannot be empty");
+        }
+        return true;
+    }
+
+    public void deleteTodoById(Long id) throws Exception {
+        Todo todoToDelete = this.findTodoById(id);
+        this.todoRepository.delete(todoToDelete);
+    }
+
 }

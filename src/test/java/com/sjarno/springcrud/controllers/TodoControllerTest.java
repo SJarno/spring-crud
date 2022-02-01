@@ -133,7 +133,7 @@ public class TodoControllerTest {
         assertEquals("Content cannot be empty", noContentResult.getResponse().getContentAsString());
         checkArraySize(1);
     }
-
+    /* Update this: */
     @Test
     void testDeleteTodo() throws Exception {
         checkArraySize(1);
@@ -192,7 +192,7 @@ public class TodoControllerTest {
         return this.mockMvc.perform(post("/api/add-todo")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(objectMapper.writeValueAsString(todo)));
-                //.andExpect(status().isCreated());
+                
     }
 
     private ResultActions deleteTodo(int id) throws Exception {

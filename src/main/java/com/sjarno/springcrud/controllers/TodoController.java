@@ -74,6 +74,7 @@ public class TodoController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
+    /* Initial data here for testing purposes: */
     @PostConstruct
     public void setUp() {
         this.todoRepository.deleteAll();

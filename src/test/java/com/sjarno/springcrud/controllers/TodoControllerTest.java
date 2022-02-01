@@ -3,6 +3,7 @@ package com.sjarno.springcrud.controllers;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -24,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.util.NestedServletException;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -57,7 +59,7 @@ public class TodoControllerTest {
                 .andExpect(jsonPath("$[*].id", containsInAnyOrder(1)))
                 .andExpect(jsonPath("$[*].title", containsInAnyOrder("Test Title")))
                 .andExpect(jsonPath("$[*].content", containsInAnyOrder("Loads of content here")));
-        
+
         checkArraySize(1);
         // array of members:
         /*
@@ -68,12 +70,26 @@ public class TodoControllerTest {
 
     @Test
     void testGetTodo() throws Exception {
-        this.mockMvc.perform(get("/api/todo/1"))
-                .andExpectAll(status().isOk())
-                .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.title", is("Test Title")))
-                .andExpect(jsonPath("$.content", is("Loads of content here")));
+            getTodoById(1, "Test Title", "Loads of content here");
 
+    }
+
+    @Test
+    void todoNotFoundShouldThrowError() throws Exception {
+        Exception exception = assertThrows(Exception.class, () -> {
+            this.mockMvc.perform(get("/api/todo/66"));
+        });
+    }
+
+    @Test
+    void canUpdateTodo() throws Exception {
+        Todo todoToUpdate = new Todo("title change", "content change");
+        this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/1")
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .content(objectMapper.writeValueAsString(todoToUpdate)))
+            .andExpect(status().isOk());
+
+        getTodoById(1, todoToUpdate.getTitle(), todoToUpdate.getContent());
     }
 
     @Test
@@ -105,7 +121,6 @@ public class TodoControllerTest {
         checkArraySize(1);
         deleteTodo(5);
         checkArraySize(0);
-        
 
     }
 
@@ -120,9 +135,18 @@ public class TodoControllerTest {
                 .content(objectMapper.writeValueAsString(todo)))
                 .andExpect(status().isOk());
     }
-    private ResultActions deleteTodo(int id) throws Exception{
+
+    private ResultActions deleteTodo(int id) throws Exception {
         return this.mockMvc.perform(MockMvcRequestBuilders.delete("/api/delete-todo/{id}", id))
                 .andExpect(status().isOk());
+    }
+
+    private ResultActions getTodoById(int id, String title, String content) throws Exception {
+        return this.mockMvc.perform(get("/api/todo/"+id))
+                .andExpectAll(status().isOk())
+                .andExpect(jsonPath("$.id", is(id)))
+                .andExpect(jsonPath("$.title", is(title)))
+                .andExpect(jsonPath("$.content", is(content)));
     }
 
 }

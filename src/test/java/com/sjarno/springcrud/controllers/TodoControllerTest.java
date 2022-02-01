@@ -81,16 +81,16 @@ public class TodoControllerTest {
     }
 
     @Test
-    void testGetTodo() throws Exception {
+    void testGetTodoById() throws Exception {
             getTodoById(1, "Test Title", "Loads of content here");
 
     }
 
     @Test
     void todoNotFoundShouldThrowError() throws Exception {
-        Exception exception = assertThrows(Exception.class, () -> {
-            this.mockMvc.perform(get("/api/todo/66"));
-        });
+        MvcResult result = this.mockMvc.perform(get("/api/todo/66"))
+            .andExpect(status().isNotFound()).andReturn();
+        assertEquals("Not found", result.getResponse().getContentAsString());
     }
 
     @Test
@@ -173,11 +173,12 @@ public class TodoControllerTest {
     }
 
     private ResultActions getTodoById(int id, String title, String content) throws Exception {
-        return this.mockMvc.perform(get("/api/todo/"+id))
-                .andExpectAll(status().isOk())
+        return this.mockMvc.perform(get("/api/todo/"+id)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.id", is(id)))
                 .andExpect(jsonPath("$.title", is(title)))
-                .andExpect(jsonPath("$.content", is(content)));
+                .andExpect(jsonPath("$.content", is(content)))
+                .andExpectAll(status().isFound());
     }
 
 }

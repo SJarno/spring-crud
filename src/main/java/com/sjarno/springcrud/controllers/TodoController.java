@@ -37,10 +37,12 @@ public class TodoController {
         return this.todoService.getAllTodos();
     }
     @GetMapping("/todo/{id}")
-    public Todo getTodo(@PathVariable Long id) throws Exception{
-        Todo todo = this.todoRepository.findById(id)
-            .orElseThrow(IllegalArgumentException::new);
-        return todo;
+    public ResponseEntity<?> getTodo(@PathVariable Long id) throws Exception{
+        try {
+            return new ResponseEntity<Todo>(this.todoService.findTodoById(id), HttpStatus.FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
     @PostMapping("/add-todo")
     public ResponseEntity<?> addNewTodo(@RequestBody Todo todo) {
@@ -48,8 +50,6 @@ public class TodoController {
             this.todoService.addTodo(todo);
             return new ResponseEntity<String>("Success", HttpStatus.CREATED);
         } catch (Exception e) {
-            /* String errorMessage = e.getMessage().toString();
-            System.out.println(errorMessage); */
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
         

@@ -32,16 +32,33 @@ public class TodoServiceTest {
     }
     @Test
     void emptyValuesThrowsError() {
-        Todo todoWithoutTitle = new Todo();
+        Todo todoNull = new Todo();
+
+        Todo todoWithoutTitle = new Todo("", "");
         todoWithoutTitle.setContent("content");
-        Todo todoWithoutContent = new Todo();
+        Todo todoWithoutContent = new Todo("", "");
+        todoWithoutContent.setTitle("title");
         assertEquals(1, todoService.getAllTodos().size());
-        Exception exception = assertThrows(Exception.class, () -> {
-            this.todoService.addTodo(todoWithoutTitle);
-            this.todoService.addTodo(todoWithoutContent);
+        Exception nullException = assertThrows(NullPointerException.class, () -> {
+            this.todoService.addTodo(todoNull);
         });
+        
+        assertEquals("Values cannot be empty!", nullException.getMessage());
         assertEquals(1, todoService.getAllTodos().size());
-        //assertEquals("expected", exception.getMessage());
+
+        Exception exceptionWithOutTitle = assertThrows(IllegalArgumentException.class, () -> {
+            this.todoService.addTodo(todoWithoutTitle);
+            
+        });
+        assertEquals("Title cannot be empty", exceptionWithOutTitle.getMessage());
+        assertEquals(1, todoService.getAllTodos().size());
+        
+        Exception exceptionWithOutContent = assertThrows(IllegalArgumentException.class, () -> {
+            this.todoService.addTodo(todoWithoutContent);
+            
+        });
+        assertEquals("Content cannot be empty", exceptionWithOutContent.getMessage());
+        assertEquals(1, todoService.getAllTodos().size());
     }
 
     @Test

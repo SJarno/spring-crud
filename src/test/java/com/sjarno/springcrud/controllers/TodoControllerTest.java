@@ -182,6 +182,12 @@ public class TodoControllerTest {
             .andExpect(status().isUnprocessableEntity()).andReturn();
         assertEquals("Content cannot be empty", resultWithoutContent.getResponse().getContentAsString());
     }
+    @Test
+    void idNotFoundWhenDeleting() throws Exception {
+        MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.delete("/api/delete-todo/88"))
+            .andExpect(status().isUnprocessableEntity()).andReturn();
+        assertEquals("Not found", result.getResponse().getContentAsString());
+    }
 
     private ResultActions checkArraySize(int size) throws Exception {
         return this.mockMvc.perform(get("/api/todos"))

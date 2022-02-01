@@ -1,4 +1,5 @@
 # Spring Crud operations
+
 ![Github Actions](https://github.com/SJarno/spring-crud/actions/workflows/maven.yml/badge.svg)
 
 

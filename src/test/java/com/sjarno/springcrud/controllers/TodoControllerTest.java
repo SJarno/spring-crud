@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.annotation.DirtiesContext;
@@ -84,7 +85,7 @@ public class TodoControllerTest {
 
     @Test
     @WithMockUser
-    public void testGetAllTodos() throws Exception {
+    public void authenticatedUserCanGetAllTodos() throws Exception {
         /*
          * More about checking json array:
          * https://stackoverflow.com/questions/55269036/spring-mockmvc-match-a-
@@ -110,12 +111,36 @@ public class TodoControllerTest {
     }
 
     @Test
+    @WithAnonymousUser
+    void anonymousUserCantGetTodosAndRedirectsToLogin() throws Exception {
+        this.mockMvc.perform(get("/api/todos"))
+                .andExpectAll(status().isFound())
+                .andDo(print())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$[*].id").doesNotExist())
+                .andExpect(jsonPath("$[*].title").doesNotExist())
+                .andExpect(jsonPath("$[*].content").doesNotExist());
+    }
+
+    @Test
     @WithMockUser
     void testGetTodoById() throws Exception {
         getTodoById(1, "Title One", "Content One");
         getTodoById(2, "Title Two", "Content Two");
         getTodoById(3, "Title Three", "Content Three");
 
+    }
+
+    @Test
+    @WithAnonymousUser
+    void testGetTodoByIdDoesNotExistAndRedirects() throws Exception {
+        this.mockMvc.perform(get("/api/todo/1")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").doesNotExist())
+                .andExpect(jsonPath("$.title").doesNotExist())
+                .andExpect(jsonPath("$.content").doesNotExist())
+                .andExpectAll(status().isFound());
     }
 
     @Test
@@ -129,7 +154,6 @@ public class TodoControllerTest {
     
 
     @Test
-    //@WithMockUser(username = "Mikko", password = "pass", roles = {"USER"})
     @WithMockUser
     void testAddNewTodo() throws Exception {
         Todo todo = new Todo("title", "content");
@@ -143,6 +167,17 @@ public class TodoControllerTest {
 
         checkArraySize(4);
         
+    }
+    @Test
+    @WithAnonymousUser
+    void testAnonymousUserCantAddNewTodo() throws Exception {
+        Todo todo = new Todo("title", "content");
+        MvcResult result = addTodo(todo)
+                .andExpect(status()
+                .isFound()).andReturn();
+        assertEquals("", result.getResponse().getContentAsString());
+        
+    
     }
 
     @Test

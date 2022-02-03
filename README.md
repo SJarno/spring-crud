@@ -12,8 +12,8 @@ For future reference
 - Tests (done)
 - Service classess for controllers (done)
 - Moar tests (started): missing updated delete tests
-- Spring Security
-- Testing with Spring Security
+- Spring Security (upcoming)
+- Testing with Spring Security (upcoming)
 
 ## Notes
 - Jacoco plugin (run with: "mvn test jacoco:report")

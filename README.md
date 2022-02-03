@@ -15,10 +15,15 @@ For future reference
 - Spring Security (done)
 - Testing with Spring Security (done)
 - Testing with authenticated user / withDetails (done)
-- Test wit anonymous user / with out details (in progress)
+- Test wit anonymous user / with out details (done)
+      just a few simple tests, spring security redirects to login on every request that is not authenticated
 
 ## Notes
 - Jacoco plugin (run with: "mvn test jacoco:report")
+
+## Other
+So this one is pretty much done, and moving on to next one using Spring and Angular.
+That one can be found here: 
 
 
 

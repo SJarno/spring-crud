@@ -86,6 +86,7 @@ public class TodoServiceTest {
         assertEquals(this.dummyTodo, found);
         assertTrue(found.equals(this.dummyTodo));
         assertNotEquals(this.todoNull, found);
+        
     }
     @Test
     void wrongIdThrowsException() {

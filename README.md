@@ -11,7 +11,7 @@ For future reference
 - Basic Crud on controllers (done)
 - Tests (done)
 - Service classess for controllers (done)
-- Moar tests (started): missing updated delete tests
+- Moar tests (started): (done)
 - Spring Security (upcoming)
 - Testing with Spring Security (upcoming)
 

@@ -3,6 +3,7 @@ package com.sjarno.springcrud.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.sjarno.springcrud.models.Todo;
 
@@ -78,6 +79,22 @@ public class TodoServiceTest {
     void testGetAllUsers() {
         assertEquals(1, todoService.getAllTodos().size());
     }
+
+    @Test
+    void getTodoById() throws Exception {
+        Todo found = this.todoService.findTodoById(1L);
+        assertEquals(this.dummyTodo, found);
+        assertTrue(found.equals(this.dummyTodo));
+        assertNotEquals(this.todoNull, found);
+    }
+    @Test
+    void wrongIdThrowsException() {
+        Exception exception = assertThrows(Exception.class, () -> {
+            Todo found = this.todoService.findTodoById(99L);
+        });
+        assertEquals("Not found", exception.getMessage());
+    }
+
     @Test
     void testUpdatesSuccessfully() throws Exception {
         assertEquals(1, todoService.getAllTodos().size());

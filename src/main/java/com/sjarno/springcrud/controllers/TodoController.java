@@ -75,11 +75,11 @@ public class TodoController {
         }
     }
     /* Initial data here for testing purposes: */
-    @PostConstruct
+    /* @PostConstruct
     public void setUp() {
         this.todoRepository.deleteAll();
         this.todoRepository.save(
             new Todo("Test Title", "Loads of content here"));
-    }
+    } */
     
 }

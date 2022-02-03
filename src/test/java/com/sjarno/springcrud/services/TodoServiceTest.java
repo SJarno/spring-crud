@@ -41,6 +41,7 @@ public class TodoServiceTest {
 
         
         dummyTodo = new Todo("DummyTitle", "DummyContent");
+        this.todoService.addTodo(dummyTodo);
     }
     @Test
     public void testAddTodo() {

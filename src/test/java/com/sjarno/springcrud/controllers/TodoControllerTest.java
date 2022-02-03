@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -12,15 +13,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sjarno.springcrud.models.Todo;
+import com.sjarno.springcrud.repositories.TodoRepository;
 
+import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -42,19 +48,40 @@ public class TodoControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private TodoRepository todoRepository;
+    /* Todos with right values: */
+    Todo todoOne;
+    Todo todoTwo;
+    Todo todoThree;
+
+    /* Todos with wrong values: */
     private Todo todoWithNullValues;
     private Todo todoWithoutTitle;
-    
     private Todo todoWithoutContent;
-        
+
+    private List<Todo> todos;
 
     @BeforeEach
     void setUp() {
+        /* Set up right values */
+        todoOne = new Todo("Title One", "Content One");
+        todoTwo = new Todo("Title Two", "Content Two");
+        todoThree = new Todo("Title Three", "Content Three");
+
+        todos = new ArrayList<>();
+        todos.add(todoOne);
+        todos.add(todoTwo);
+        todos.add(todoThree);
+
+        this.todoRepository.saveAll(todos);
+        /* Set up wrong values */
         todoWithNullValues = new Todo();
         todoWithoutTitle = new Todo("", "");
         todoWithoutTitle.setContent("content");
         todoWithoutContent = new Todo("", "");
         todoWithoutContent.setTitle("title");
+
     }
 
     @Test
@@ -73,23 +100,28 @@ public class TodoControllerTest {
                 .andExpectAll(status().isOk())
                 .andDo(print())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$[*].id", containsInAnyOrder(1)))
-                .andExpect(jsonPath("$[*].title", containsInAnyOrder("Test Title")))
-                .andExpect(jsonPath("$[*].content", containsInAnyOrder("Loads of content here")));
-        checkArraySize(1);
-        
+                .andExpect(jsonPath("$[*].id",
+                        containsInAnyOrder(1, 2, 3)))
+                .andExpect(jsonPath("$[*].title",
+                        containsInAnyOrder("Title One", "Title Two", "Title Three")))
+                .andExpect(jsonPath("$[*].content",
+                        containsInAnyOrder("Content One", "Content Two", "Content Three")));
+        checkArraySize();
+
     }
 
     @Test
     void testGetTodoById() throws Exception {
-            getTodoById(1, "Test Title", "Loads of content here");
+        getTodoById(1, "Title One", "Content One");
+        getTodoById(2, "Title Two", "Content Two");
+        getTodoById(3, "Title Three", "Content Three");
 
     }
 
     @Test
     void todoNotFoundShouldThrowError() throws Exception {
         MvcResult result = this.mockMvc.perform(get("/api/todo/66"))
-            .andExpect(status().isNotFound()).andReturn();
+                .andExpect(status().isNotFound()).andReturn();
         assertEquals("Not found", result.getResponse().getContentAsString());
     }
 
@@ -97,9 +129,9 @@ public class TodoControllerTest {
     void canUpdateTodo() throws Exception {
         Todo todoToUpdate = new Todo("title change", "content change");
         MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/1")
-            .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(objectMapper.writeValueAsString(todoToUpdate)))
-            .andExpect(status().isOk()).andReturn();
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(objectMapper.writeValueAsString(todoToUpdate)))
+                .andExpect(status().isOk()).andReturn();
 
         assertEquals("Updated", result.getResponse().getContentAsString());
         getTodoById(1, todoToUpdate.getTitle(), todoToUpdate.getContent());
@@ -108,53 +140,46 @@ public class TodoControllerTest {
     @Test
     void testAddNewTodo() throws Exception {
         Todo todo = new Todo("title", "content");
-        /* Initial size should be 1 */
-        checkArraySize(1);
+        /* Initial size should be 3 */
+        checkArraySize();
 
         MvcResult result = addTodo(todo).andExpect(status()
-            .isCreated()).andReturn();
+                .isCreated()).andReturn();
         assertEquals("Success", result.getResponse().getContentAsString());
-        /* Should be 2 */
-        checkArraySize(2);
+
+        checkArraySize(4);
     }
+
     @Test
     void newTodosWithoEmptyValuesDoesNotAddToDb() throws Exception {
-        
-        checkArraySize(1);
+
+        checkArraySize(3);
         valuesReturnsStringWhenAddinTodo(todoWithNullValues, "Values cannot be empty!");
 
         valuesReturnsStringWhenAddinTodo(todoWithoutTitle, "Title cannot be empty");
-        checkArraySize(1);
+        checkArraySize(3);
 
         valuesReturnsStringWhenAddinTodo(todoWithoutContent, "Content cannot be empty");
-        checkArraySize(1);
+        checkArraySize(3);
     }
-    
+
     /* Update this: */
     @Test
     void testDeleteTodo() throws Exception {
-        checkArraySize(1);
-        deleteTodo(1);
-        checkArraySize(0);
-        addTodo(new Todo("title", "content"));
-        addTodo(new Todo("title", "content"));
-        addTodo(new Todo("title", "content"));
-        addTodo(new Todo("title", "content"));
-        checkArraySize(4);
-        deleteTodo(2);
         checkArraySize(3);
         deleteTodo(3);
         checkArraySize(2);
-        deleteTodo(4);
+        deleteTodo(2);
         checkArraySize(1);
-        deleteTodo(5);
+        deleteTodo(1);
         checkArraySize(0);
 
     }
+
     @Test
-    void wrongValuesDoesNotUpdateTodo() throws Exception{
+    void wrongValuesDoesNotUpdateTodo() throws Exception {
         Todo todoToUpdate = new Todo("title change", "content change");
-        
+
         wrongValuesDoNotUpdateTodo("/api/update/91", todoToUpdate, "Not found");
         wrongValuesDoNotUpdateTodo("/api/update/1", todoWithNullValues, "Values cannot be empty!");
         wrongValuesDoNotUpdateTodo("/api/update/1", todoWithoutTitle, "Title cannot be empty");
@@ -162,11 +187,10 @@ public class TodoControllerTest {
 
     }
 
-    
     @Test
     void idNotFoundWhenDeleting() throws Exception {
         MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.delete("/api/delete-todo/88"))
-            .andExpect(status().isUnprocessableEntity()).andReturn();
+                .andExpect(status().isUnprocessableEntity()).andReturn();
         assertEquals("Not found", result.getResponse().getContentAsString());
     }
 
@@ -175,11 +199,16 @@ public class TodoControllerTest {
                 .andExpect(jsonPath("$", hasSize(size)));
     }
 
+    private void checkArraySize() throws Exception {
+        checkArraySize(this.todos.size());
+        assertEquals(this.todos.size(), this.todoRepository.findAll().size());
+    }
+
     private ResultActions addTodo(Todo todo) throws Exception {
         return this.mockMvc.perform(post("/api/add-todo")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(objectMapper.writeValueAsString(todo)));
-                
+
     }
 
     private ResultActions deleteTodo(int id) throws Exception {
@@ -188,22 +217,24 @@ public class TodoControllerTest {
     }
 
     private ResultActions getTodoById(int id, String title, String content) throws Exception {
-        return this.mockMvc.perform(get("/api/todo/"+id)
+        return this.mockMvc.perform(get("/api/todo/" + id)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.id", is(id)))
                 .andExpect(jsonPath("$.title", is(title)))
                 .andExpect(jsonPath("$.content", is(content)))
                 .andExpectAll(status().isFound());
     }
+
     private void valuesReturnsStringWhenAddinTodo(Todo todo, String errorMessage) throws Exception {
         MvcResult result = this.addTodo(todo).andExpect(status().isUnprocessableEntity()).andReturn();
         assertEquals(errorMessage, result.getResponse().getContentAsString());
     }
+
     private void wrongValuesDoNotUpdateTodo(String url, Todo todo, String errorMessage) throws Exception {
         MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.put(url)
-            .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(objectMapper.writeValueAsString(todo)))
-            .andExpect(status().isUnprocessableEntity()).andReturn();
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(objectMapper.writeValueAsString(todo)))
+                .andExpect(status().isUnprocessableEntity()).andReturn();
         assertEquals(errorMessage, result.getResponse().getContentAsString());
     }
 

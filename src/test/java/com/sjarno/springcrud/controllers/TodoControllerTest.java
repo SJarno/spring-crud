@@ -11,6 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.UnsupportedEncodingException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sjarno.springcrud.models.Todo;
 
@@ -119,20 +121,15 @@ public class TodoControllerTest {
     void newTodosWithoEmptyValuesDoesNotAddToDb() throws Exception {
         
         checkArraySize(1);
-        MvcResult nullValueResult = addTodo(todoWithNullValues)
-            .andExpect(status().isUnprocessableEntity()).andReturn();
-        assertEquals("Values cannot be empty!", nullValueResult.getResponse().getContentAsString());
+        valuesReturnsStringWhenAddinTodo(todoWithNullValues, "Values cannot be empty!");
 
-        MvcResult noTitleResult = addTodo(todoWithoutTitle)
-            .andExpect(status().isUnprocessableEntity()).andReturn();
-        assertEquals("Title cannot be empty", noTitleResult.getResponse().getContentAsString());
+        valuesReturnsStringWhenAddinTodo(todoWithoutTitle, "Title cannot be empty");
         checkArraySize(1);
 
-        MvcResult noContentResult = addTodo(todoWithoutContent)
-            .andExpect(status().isUnprocessableEntity()).andReturn();
-        assertEquals("Content cannot be empty", noContentResult.getResponse().getContentAsString());
+        valuesReturnsStringWhenAddinTodo(todoWithoutContent, "Content cannot be empty");
         checkArraySize(1);
     }
+    
     /* Update this: */
     @Test
     void testDeleteTodo() throws Exception {
@@ -157,31 +154,15 @@ public class TodoControllerTest {
     @Test
     void wrongValuesDoesNotUpdateTodo() throws Exception{
         Todo todoToUpdate = new Todo("title change", "content change");
-        MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/97")
-            .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(objectMapper.writeValueAsString(todoToUpdate)))
-            .andExpect(status().isUnprocessableEntity()).andReturn();
-        assertEquals("Not found", result.getResponse().getContentAsString());
-
         
-        MvcResult resultWithNullValues = this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/1")
-            .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(objectMapper.writeValueAsString(todoWithNullValues)))
-            .andExpect(status().isUnprocessableEntity()).andReturn();
-        assertEquals("Values cannot be empty!", resultWithNullValues.getResponse().getContentAsString());
+        wrongValuesDoNotUpdateTodo("/api/update/91", todoToUpdate, "Not found");
+        wrongValuesDoNotUpdateTodo("/api/update/1", todoWithNullValues, "Values cannot be empty!");
+        wrongValuesDoNotUpdateTodo("/api/update/1", todoWithoutTitle, "Title cannot be empty");
+        wrongValuesDoNotUpdateTodo("/api/update/1", todoWithoutContent, "Content cannot be empty");
 
-        MvcResult resultWithoutTitle = this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/1")
-            .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(objectMapper.writeValueAsString(todoWithoutTitle)))
-            .andExpect(status().isUnprocessableEntity()).andReturn();
-        assertEquals("Title cannot be empty", resultWithoutTitle.getResponse().getContentAsString());
-
-        MvcResult resultWithoutContent = this.mockMvc.perform(MockMvcRequestBuilders.put("/api/update/1")
-            .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(objectMapper.writeValueAsString(todoWithoutContent)))
-            .andExpect(status().isUnprocessableEntity()).andReturn();
-        assertEquals("Content cannot be empty", resultWithoutContent.getResponse().getContentAsString());
     }
+
+    
     @Test
     void idNotFoundWhenDeleting() throws Exception {
         MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.delete("/api/delete-todo/88"))
@@ -213,6 +194,17 @@ public class TodoControllerTest {
                 .andExpect(jsonPath("$.title", is(title)))
                 .andExpect(jsonPath("$.content", is(content)))
                 .andExpectAll(status().isFound());
+    }
+    private void valuesReturnsStringWhenAddinTodo(Todo todo, String errorMessage) throws Exception {
+        MvcResult result = this.addTodo(todo).andExpect(status().isUnprocessableEntity()).andReturn();
+        assertEquals(errorMessage, result.getResponse().getContentAsString());
+    }
+    private void wrongValuesDoNotUpdateTodo(String url, Todo todo, String errorMessage) throws Exception {
+        MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.put(url)
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .content(objectMapper.writeValueAsString(todo)))
+            .andExpect(status().isUnprocessableEntity()).andReturn();
+        assertEquals(errorMessage, result.getResponse().getContentAsString());
     }
 
 }

@@ -12,8 +12,13 @@ For future reference
 - Tests (done)
 - Service classess for controllers (done)
 - Moar tests (started): (done)
-- Spring Security (upcoming)
-- Testing with Spring Security (upcoming)
+- Spring Security (done)
+- Testing with Spring Security (done)
+- Testing with authenticated user / withDetails (done)
+- Test wit anonymous user / with out details (in progress)
 
 ## Notes
 - Jacoco plugin (run with: "mvn test jacoco:report")
+
+
+

@@ -26,9 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class TodoController {
 
     @Autowired
-    private TodoRepository todoRepository;
-
-    @Autowired
     private TodoService todoService;
 
     @GetMapping("/todos")

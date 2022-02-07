@@ -116,7 +116,7 @@ public class TodoControllerTest {
         this.mockMvc.perform(get("/api/todos"))
                 .andExpectAll(status().isFound())
                 .andDo(print())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                //.andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$[*].id").doesNotExist())
                 .andExpect(jsonPath("$[*].title").doesNotExist())
                 .andExpect(jsonPath("$[*].content").doesNotExist());

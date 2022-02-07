@@ -23,7 +23,8 @@ For future reference
 
 ## Other
 So this one is pretty much done, and moving on to next one using Spring and Angular.
-That one can be found here: 
+
+That one can be found here: https://github.com/SJarno/spring-angular-crud
 
 
 
